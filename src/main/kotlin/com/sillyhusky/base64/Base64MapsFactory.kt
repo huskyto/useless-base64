@@ -1,9 +1,11 @@
 package com.sillyhusky.base64
 
+import kotlin.streams.toList
+
 class Base64MapsFactory : Base64Maps {
 
-    private var binToCharMap: Map<Int, Char>
-    private var charToBinMap: Map<Char, Int>
+    private var binToCharMap: Map<Int, Int>
+    private var charToBinMap: Map<Int, Int>
 
     constructor(key: String) {
         val pair = generateMaps(key)
@@ -17,28 +19,29 @@ class Base64MapsFactory : Base64Maps {
         }
     }
 
-    override fun getBinToCharMap(): Map<Int, Char> {
+    override fun getBinToCharMap(): Map<Int, Int> {
         return binToCharMap
     }
 
-    override fun getCharToBinMap(): Map<Char, Int> {
+    override fun getCharToBinMap(): Map<Int, Int> {
         return charToBinMap
     }
 
-    private fun generateMaps(key: String): Pair<Map<Char, Int>, Map<Int, Char>>? {
-        if (key.length != 64) {
-            println("Error: Input string must contain exactly 64 characters.")
+    private fun generateMaps(key: String): Pair<Map<Int, Int>, Map<Int, Int>>? {
+        val cps = key.codePoints().toList()
+        if (cps.size != 64) {
+            println("Error: Input string must contain exactly 64 characters. It has ${cps.size}")
             return null
         }
 
-        val charSet = key.toSet()
+        val charSet = cps.toSet()
         if (charSet.size != 64) {
-            val duplicates = key.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
+            val duplicates = cps.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
             println("Error: Input string contains duplicate characters: $duplicates")
             return null
         }
 
-        val encodeMap = key.mapIndexed { index, char -> char to index }.toMap()
+        val encodeMap = cps.mapIndexed { index, char -> char to index }.toMap()
         val decodeMap = encodeMap.entries.associateBy({ it.value }, { it.key })
 
         return Pair(encodeMap, decodeMap)
